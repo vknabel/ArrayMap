@@ -10,7 +10,7 @@
 private func countArrayMapRawValue<Key: Hashable, Value>(rawValue: [Key: [Value]]) -> Int {
     return rawValue.reduce(0) { $0 + $1.1.count }
 }
-public struct ArrayMap<Key: Hashable, Value>: SequenceType {
+public struct ArrayMap<Key: Hashable, Value>: Sequence {
     internal var rawValue: [Key: [Value]]
     public private(set) var count: Int
 
@@ -20,34 +20,34 @@ public struct ArrayMap<Key: Hashable, Value>: SequenceType {
     }
     public init(dict: [Key: [Value]]) {
         rawValue = dict
-        count = countArrayMapRawValue(dict)
+        count = countArrayMapRawValue(rawValue: dict)
     }
 
-    public typealias Generator = ArrayMapGenerator<Key, Value>
-    public typealias SubSequence = Array<Generator.Element>.SubSequence
+    public typealias Iterator = ArrayMapIterator<Key, Value>
+    public typealias SubSequence = Array<Iterator.Element>.SubSequence
+    
     /// - Complexity: O(1).
-    @warn_unused_result
-    public func generate() -> Generator {
-        return Generator(arrayMap: self)
+    public func makeIterator() -> Iterator {
+        return Iterator(arrayMap: self)
     }
+    
     /// - Complexity: O(N).
-    @warn_unused_result
     public func underestimateCount() -> Int {
-        return countArrayMapRawValue(rawValue)
+        return countArrayMapRawValue(rawValue: rawValue)
     }
+    
     /// - Complexity: O(N).
-    @warn_unused_result
-    public func map<T>(@noescape transform: (Generator.Element) throws -> T) rethrows -> [T] {
+    public func map<T>(@noescape transform: (Iterator.Element) throws -> T) rethrows -> [T] {
         var maps = [T]()
         for e in self {
             maps.append(try transform(e))
         }
         return maps
     }
+    
     /// - Complexity: O(N)
-    @warn_unused_result
-    public func filter(@noescape includeElement: (Generator.Element) throws -> Bool) rethrows -> [Generator.Element] {
-        var maps: [Generator.Element] = []
+    public func filter(@noescape includeElement: (Iterator.Element) throws -> Bool) rethrows -> [Iterator.Element] {
+        var maps: [Iterator.Element] = []
         for e in self {
             if try includeElement(e) {
                 maps.append(e)
@@ -55,38 +55,38 @@ public struct ArrayMap<Key: Hashable, Value>: SequenceType {
         }
         return maps
     }
+    
     /// - Complexity: O(N)
-    public func forEach(@noescape body: (Generator.Element) throws -> ()) rethrows {
+    public func forEach(@noescape body: (Iterator.Element) throws -> ()) rethrows {
         for e in self {
             try body(e)
         }
     }
+    
     /// - Requires: `n >= 0`
     /// - Complexity: O(N)
-    @warn_unused_result
-    public func dropFirst(n: Int = 1) -> SubSequence {
-        return Array(self).dropFirst(n)
-    }
-    /// - Requires: `n >= 0`
-    /// - Complexity: O(`self.count`)
-    @warn_unused_result
-    public func dropLast(n: Int = 1) -> SubSequence {
-        return Array(self).dropLast(n)
-    }
-    /// - Requires: `maxLength >= 0`
-    @warn_unused_result
-    public func prefix(maxLength: Int) -> SubSequence {
-        return Array(self).prefix(maxLength)
-    }
-    /// - Requires: `maxLength >= 0`
-    @warn_unused_result
-    public func suffix(maxLength: Int) -> SubSequence {
-        return Array(self).suffix(maxLength)
-    }
-    /// - Requires: `maxSplit >= 0`
-    @warn_unused_result
-    public func split(maxSplit: Int, allowEmptySlices: Bool, @noescape isSeparator: (Generator.Element) throws -> Bool) rethrows -> [SubSequence] {
-        return try Array(self).split(maxSplit, allowEmptySlices: allowEmptySlices, isSeparator: isSeparator)
+    public func dropFirst(_ n: Int = 1) -> SubSequence {
+        return Array<Iterator.Element>(self).dropFirst(n)
     }
     
+    /// - Requires: `n >= 0`
+    /// - Complexity: O(`self.count`)
+    public func dropLast(_ n: Int = 1) -> SubSequence {
+        return Array<Iterator.Element>(self).dropLast(n)
+    }
+    
+    /// - Requires: `maxLength >= 0`
+    public func prefix(_ maxLength: Int) -> SubSequence {
+        return Array<Iterator.Element>(self).prefix(maxLength)
+    }
+    
+    /// - Requires: `maxLength >= 0`
+    public func suffix(_ maxLength: Int) -> SubSequence {
+        return Array<Iterator.Element>(self).suffix(maxLength)
+    }
+    
+    /// - Requires: `maxSplit >= 0`
+    public func split(maxSplits: Int, omittingEmptySubsequences: Bool, @noescape isSeparator: (Iterator.Element) throws -> Bool) rethrows -> [SubSequence] {
+        return try Array<Iterator.Element>(self).split(maxSplits: maxSplits, omittingEmptySubsequences: omittingEmptySubsequences, isSeparator: isSeparator)
+    }
 }
