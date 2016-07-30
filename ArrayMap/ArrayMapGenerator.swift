@@ -6,16 +6,16 @@
 //  Copyright © 2016 Conclurer GmbH. All rights reserved.
 //
 
-public struct ArrayMapIterator<Key: Hashable, Value>: IteratorProtocol {
+public struct ArrayMapIterator<Key: Hashable, Value>: GeneratorType {
 
     public typealias Element = (Key, Value)
 
-    private var primaryGenerator: Dictionary<Key, [Value]>.Iterator
+    private var primaryGenerator: Dictionary<Key, [Value]>.Generator
     private var secondaryGenerator: Array<Value>.Generator? = nil
     private var currentKey: Key? = nil
 
     public init(arrayMap: ArrayMap<Key, Value>) {
-        primaryGenerator = arrayMap.rawValue.makeIterator()
+        primaryGenerator = arrayMap.rawValue.generate()
     }
 
     @warn_unused_result
@@ -26,7 +26,7 @@ public struct ArrayMapIterator<Key: Hashable, Value>: IteratorProtocol {
             return (currentKey, nextResult)
         } else if let newValue = primaryGenerator.next() {
             currentKey = newValue.0
-            secondaryGenerator = newValue.1.makeIterator()
+            secondaryGenerator = newValue.1.generate()
             return next()
         } else {
             return nil
