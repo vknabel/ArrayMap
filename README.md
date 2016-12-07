@@ -1,4 +1,7 @@
 # ArrayMap
+
+**DISCONTINUED**
+
 ArrayMap is a SequenceType containing multiple values per key.
 
 This project was created 
